@@ -128,7 +128,9 @@ CoinGecko_ETL_process/
     └── dashboard.png           # Dashboard screenshot
 
 #Architecture Decisions
-|3-layer architecture (raw/cleaned/mart) | Data loss protection, recalculation ability, dashboard performance|
-ReplacingMergeTree in cleaned | Automatic deduplication on repeated loads|
-ClickHouse | Columnar storage = fast analytical queries|
-Airflow | DAG Scheduled execution, no manual intervention needed|
+| Decision                              | Why                                                                    |
+|---------------------------------------|------------------------------------------------------------------------|
+| 3-layer architecture (raw/cleaned/mart) | Data loss protection, recalculation ability, dashboard performance   |
+| ReplacingMergeTree in cleaned         | Automatic deduplication on repeated loads                              |
+| ClickHouse                            | Columnar storage = fast analytical queries                             |
+| Airflow DAG                           | Scheduled execution, no manual intervention needed                     |
