@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  # === ClickHouse ===
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    container_name: crypto_clickhouse
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    environment:
+      CLICKHOUSE_USER: default
+      CLICKHOUSE_PASSWORD: "password"
+      CLICKHOUSE_DB: default
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+    networks:
+      - crypto_network
+
+  # === PostgreSQL для Airflow ===
+  postgres:
+    image: postgres:16
+    container_name: crypto_postgres
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - crypto_network
+
+  # === Airflow ===
+  airflow:
+    build:
+      context: .
+      dockerfile: Dockerfile.airflow
+    container_name: crypto_airflow
+    command: standalone
+    ports:
+      - "18080:8080"
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres/airflow
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./scripts:/opt/airflow/scripts
+    depends_on:
+      - postgres
+      - clickhouse
+    networks:
+      - crypto_network
+
+  # === Superset ===
+  superset:
+    image: apache/superset:3.1.1
+    container_name: crypto_superset
+    ports:
+      - "8088:8088"
+    environment:
+      - SUPERSET_SECRET_KEY=your-secret-key-change-this
+    volumes:
+      - superset_data:/app/superset_home
+    depends_on:
+      - clickhouse
+    networks:
+      - crypto_network
+
+volumes:
+  clickhouse_data:
+  postgres_data:
+  superset_data:
+
+networks:
+  crypto_network:
+    driver: bridge
